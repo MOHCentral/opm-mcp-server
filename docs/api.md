@@ -2,6 +2,15 @@
 
 This document provides detailed information about all available MCP tools.
 
+## Environment Variables
+
+Configure these in your MCP client's `env` section:
+
+| Variable | Description |
+|----------|-------------|
+| `OPENMOHAA_EXEC_PATH` | Default path to OpenMOHAA executable |
+| `OPENMOHAA_GAME_DIR` | Default game directory for config/demo/log operations |
+
 ## Game Lifecycle Tools
 
 ### openmohaa_launch
@@ -12,7 +21,7 @@ Launch OpenMOHAA with specified configuration.
 
 | Name | Type | Required | Default | Description |
 |------|------|----------|---------|-------------|
-| executablePath | string | Yes | - | Full path to OpenMOHAA executable |
+| executablePath | string | No | env var | Full path to executable. Falls back to OPENMOHAA_EXEC_PATH |
 | workingDirectory | string | No | exe dir | Working directory for the game |
 | args | string[] | No | [] | Additional command line arguments |
 | env | object | No | {} | Environment variables |
@@ -30,6 +39,21 @@ Launch OpenMOHAA with specified configuration.
   "exitCode": null,
   "startTime": "2024-01-15T10:30:00Z",
   "lastError": null
+}
+```
+
+### openmohaa_get_defaults
+
+Get configured default paths from environment variables.
+
+**Parameters**: None
+
+**Response**:
+```json
+{
+  "executablePath": "/path/to/openmohaa",
+  "gameDirectory": "/path/to/game",
+  "hint": "Set via OPENMOHAA_EXEC_PATH and OPENMOHAA_GAME_DIR env vars in mcp.json"
 }
 ```
 

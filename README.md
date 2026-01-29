@@ -54,26 +54,42 @@ npm run build
 
 ## Configuration
 
-Add to your MCP client configuration (e.g., Claude Desktop):
+Add to your MCP client configuration (e.g., VS Code mcp.json):
 
 ```json
 {
-  "mcpServers": {
+  "servers": {
     "openmohaa": {
+      "type": "stdio",
       "command": "node",
-      "args": ["/path/to/opm-mcp/dist/index.js"]
+      "args": ["/path/to/opm-mcp/dist/index.js"],
+      "env": {
+        "OPENMOHAA_EXEC_PATH": "/path/to/openmohaa",
+        "OPENMOHAA_GAME_DIR": "/path/to/game/directory"
+      }
     }
   }
 }
 ```
+
+### Environment Variables
+
+| Variable | Description |
+|----------|-------------|
+| `OPENMOHAA_EXEC_PATH` | Default path to OpenMOHAA executable. Used by `openmohaa_launch` if no path provided. |
+| `OPENMOHAA_GAME_DIR` | Default game directory for config/demo/log operations. |
+
+You can check configured defaults with `openmohaa_get_defaults`.
 
 ## Usage
 
 ### Basic Game Control
 
 ```
-Launch OpenMOHAA at /path/to/openmohaa with windowed mode
+Launch OpenMOHAA
 ```
+
+(Uses `OPENMOHAA_EXEC_PATH` from env, or pass path explicitly)
 
 ```
 Send command "map dm/mohdm1" to the game
@@ -86,11 +102,12 @@ Take a screenshot of the game window
 ### Available Tools
 
 #### Game Lifecycle
-- `openmohaa_launch` - Launch the game
+- `openmohaa_launch` - Launch the game (uses OPENMOHAA_EXEC_PATH if no path given)
 - `openmohaa_stop` - Stop gracefully
 - `openmohaa_restart` - Restart the game
 - `openmohaa_kill` - Force kill
 - `openmohaa_status` - Get process status
+- `openmohaa_get_defaults` - Get configured default paths
 
 #### Console Commands
 - `openmohaa_send_command` - Send any console command
@@ -267,7 +284,7 @@ npm test
 
 ```
 src/
-  index.ts            # MCP server entry point (80+ tools)
+  index.ts            # MCP server entry point (100 tools)
   types.ts            # Type definitions
   launcher.ts         # Process control module
   console-manager.ts  # Console interaction

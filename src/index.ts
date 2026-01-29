@@ -28,6 +28,10 @@ import { PerformanceMonitor } from './performance-monitor.js';
 import { LogAnalyzer } from './log-analyzer.js';
 import type { AutomationScript, PixelColor, ScreenRegion } from './types.js';
 
+// Environment variable defaults
+const DEFAULT_EXEC_PATH = process.env.OPENMOHAA_EXEC_PATH || '';
+const DEFAULT_GAME_DIR = process.env.OPENMOHAA_GAME_DIR || '';
+
 // Initialize components
 const launcher = new ProcessLauncher();
 const consoleManager = new ConsoleManager(launcher);
@@ -60,13 +64,13 @@ const tools: Tool[] = [
   // === Game Lifecycle Tools ===
   {
     name: 'openmohaa_launch',
-    description: 'Launch OpenMOHAA game with specified executable path and options',
+    description: 'Launch OpenMOHAA game. Uses OPENMOHAA_EXEC_PATH env var as default if executablePath not provided.',
     inputSchema: {
       type: 'object',
       properties: {
         executablePath: {
           type: 'string',
-          description: 'Full path to the OpenMOHAA executable',
+          description: 'Full path to the OpenMOHAA executable. Falls back to OPENMOHAA_EXEC_PATH env var.',
         },
         workingDirectory: {
           type: 'string',
@@ -107,12 +111,20 @@ const tools: Tool[] = [
           default: true,
         },
       },
-      required: ['executablePath'],
+      required: [],
     },
   },
   {
     name: 'openmohaa_stop',
     description: 'Stop the running OpenMOHAA game gracefully',
+    inputSchema: {
+      type: 'object',
+      properties: {},
+    },
+  },
+  {
+    name: 'openmohaa_get_defaults',
+    description: 'Get configured default paths from environment variables',
     inputSchema: {
       type: 'object',
       properties: {},
@@ -591,24 +603,16 @@ const tools: Tool[] = [
   // === Automation Tools ===
   {
     name: 'openmohaa_run_script',
-    description: 'Run an automation script with multiple steps',
+    description: 'Run an automation script with multiple steps. Pass script as JSON string with name, steps array, optional setup/teardown arrays.',
     inputSchema: {
       type: 'object',
       properties: {
-        script: {
-          type: 'object',
-          description: 'Automation script object',
-          properties: {
-            name: { type: 'string' },
-            description: { type: 'string' },
-            steps: { type: 'array' },
-            setup: { type: 'array' },
-            teardown: { type: 'array' },
-          },
-          required: ['name', 'steps'],
+        scriptJson: {
+          type: 'string',
+          description: 'Automation script as JSON string. Must have "name" (string) and "steps" (array of step objects). Optional: "description", "setup", "teardown".',
         },
       },
-      required: ['script'],
+      required: ['scriptJson'],
     },
   },
   {
@@ -1381,8 +1385,15 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     switch (name) {
       // === Game Lifecycle ===
       case 'openmohaa_launch': {
+        const execPath = (args.executablePath as string) || DEFAULT_EXEC_PATH;
+        if (!execPath) {
+          return {
+            content: [{ type: 'text', text: 'Error: No executable path provided and OPENMOHAA_EXEC_PATH env var not set' }],
+            isError: true,
+          };
+        }
         const result = await launcher.launch({
-          executablePath: args.executablePath as string,
+          executablePath: execPath,
           workingDirectory: args.workingDirectory as string | undefined,
           arguments: args.args as string[] | undefined,
           environmentVariables: args.env as Record<string, string> | undefined,
@@ -1408,6 +1419,19 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         await launcher.stop();
         return {
           content: [{ type: 'text', text: 'Game stopped successfully' }],
+        };
+      }
+
+      case 'openmohaa_get_defaults': {
+        return {
+          content: [{
+            type: 'text',
+            text: JSON.stringify({
+              executablePath: DEFAULT_EXEC_PATH || '(not set)',
+              gameDirectory: DEFAULT_GAME_DIR || '(not set)',
+              hint: 'Set via OPENMOHAA_EXEC_PATH and OPENMOHAA_GAME_DIR env vars in mcp.json',
+            }, null, 2),
+          }],
         };
       }
 
@@ -1791,7 +1815,8 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
       // === Automation ===
       case 'openmohaa_run_script': {
-        const result = await automation.runScript(args.script as AutomationScript);
+        const script = JSON.parse(args.scriptJson as string) as AutomationScript;
+        const result = await automation.runScript(script);
         return {
           content: [
             { type: 'text', text: JSON.stringify(result, null, 2) },
