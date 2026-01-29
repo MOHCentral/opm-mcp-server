@@ -1,0 +1,94 @@
+{
+  "name": "Console Commands Test",
+  "description": "Test various console commands and cvars",
+  "setup": [
+    {
+      "action": "launch",
+      "params": {
+        "executablePath": "${OPENMOHAA_PATH}",
+        "windowed": true,
+        "width": 1280,
+        "height": 720,
+        "enableConsole": true,
+        "enableCheats": true
+      },
+      "timeout": 60000
+    },
+    {
+      "action": "wait",
+      "params": { "ms": 10000 }
+    },
+    {
+      "action": "command",
+      "params": { "command": "map dm/mohdm1" }
+    },
+    {
+      "action": "wait",
+      "params": { "ms": 15000 }
+    }
+  ],
+  "steps": [
+    {
+      "action": "log",
+      "params": { "message": "Testing god mode command" }
+    },
+    {
+      "action": "command",
+      "params": { "command": "god" }
+    },
+    {
+      "action": "wait",
+      "params": { "ms": 1000 }
+    },
+    {
+      "action": "log",
+      "params": { "message": "Testing noclip command" }
+    },
+    {
+      "action": "command",
+      "params": { "command": "noclip" }
+    },
+    {
+      "action": "wait",
+      "params": { "ms": 1000 }
+    },
+    {
+      "action": "log",
+      "params": { "message": "Testing give all command" }
+    },
+    {
+      "action": "command",
+      "params": { "command": "give all" }
+    },
+    {
+      "action": "wait",
+      "params": { "ms": 1000 }
+    },
+    {
+      "action": "log",
+      "params": { "message": "Testing cvar operations" }
+    },
+    {
+      "action": "set_cvar",
+      "params": { "name": "sv_maxclients", "value": "32" }
+    },
+    {
+      "action": "get_cvar",
+      "params": { "name": "sv_maxclients", "storeAs": "maxclients" }
+    },
+    {
+      "action": "screenshot",
+      "params": { "path": "/tmp/openmohaa_console_test.png" }
+    }
+  ],
+  "teardown": [
+    {
+      "action": "command",
+      "params": { "command": "quit" }
+    },
+    {
+      "action": "wait",
+      "params": { "ms": 3000 }
+    }
+  ]
+}

@@ -1,0 +1,109 @@
+{
+  "name": "UI Navigation Test",
+  "description": "Test navigating through game menus using mouse and keyboard",
+  "setup": [
+    {
+      "action": "launch",
+      "params": {
+        "executablePath": "${OPENMOHAA_PATH}",
+        "windowed": true,
+        "width": 1280,
+        "height": 720,
+        "enableConsole": true
+      },
+      "timeout": 60000
+    },
+    {
+      "action": "wait",
+      "params": { "ms": 10000 }
+    },
+    {
+      "action": "focus_window",
+      "params": {}
+    }
+  ],
+  "steps": [
+    {
+      "action": "log",
+      "params": { "message": "Taking initial menu screenshot" }
+    },
+    {
+      "action": "screenshot",
+      "params": { "path": "/tmp/openmohaa_menu_1.png" }
+    },
+    {
+      "action": "log",
+      "params": { "message": "Pressing Escape to access menu" }
+    },
+    {
+      "action": "press_key",
+      "params": { "key": "escape" }
+    },
+    {
+      "action": "wait",
+      "params": { "ms": 1000 }
+    },
+    {
+      "action": "screenshot",
+      "params": { "path": "/tmp/openmohaa_menu_2.png" }
+    },
+    {
+      "action": "log",
+      "params": { "message": "Clicking on center of screen" }
+    },
+    {
+      "action": "mouse_click",
+      "params": { "x": 640, "y": 400, "button": "left" }
+    },
+    {
+      "action": "wait",
+      "params": { "ms": 1000 }
+    },
+    {
+      "action": "screenshot",
+      "params": { "path": "/tmp/openmohaa_menu_3.png" }
+    },
+    {
+      "action": "log",
+      "params": { "message": "Navigating with arrow keys" }
+    },
+    {
+      "action": "press_key",
+      "params": { "key": "down" }
+    },
+    {
+      "action": "wait",
+      "params": { "ms": 500 }
+    },
+    {
+      "action": "press_key",
+      "params": { "key": "down" }
+    },
+    {
+      "action": "wait",
+      "params": { "ms": 500 }
+    },
+    {
+      "action": "press_key",
+      "params": { "key": "enter" }
+    },
+    {
+      "action": "wait",
+      "params": { "ms": 1000 }
+    },
+    {
+      "action": "screenshot",
+      "params": { "path": "/tmp/openmohaa_menu_4.png" }
+    }
+  ],
+  "teardown": [
+    {
+      "action": "command",
+      "params": { "command": "quit" }
+    },
+    {
+      "action": "wait",
+      "params": { "ms": 3000 }
+    }
+  ]
+}

@@ -1,0 +1,73 @@
+{
+  "name": "Basic Map Load Test",
+  "description": "Launch OpenMOHAA, load a deathmatch map, and verify it loads successfully",
+  "setup": [
+    {
+      "action": "launch",
+      "params": {
+        "executablePath": "${OPENMOHAA_PATH}",
+        "windowed": true,
+        "width": 1280,
+        "height": 720,
+        "enableConsole": true,
+        "enableCheats": true
+      },
+      "timeout": 60000
+    },
+    {
+      "action": "wait",
+      "params": { "ms": 10000 }
+    }
+  ],
+  "steps": [
+    {
+      "action": "toggle_console",
+      "params": {}
+    },
+    {
+      "action": "wait",
+      "params": { "ms": 500 }
+    },
+    {
+      "action": "type",
+      "params": { "text": "map dm/mohdm1" }
+    },
+    {
+      "action": "press_key",
+      "params": { "key": "enter" }
+    },
+    {
+      "action": "wait_for_console",
+      "params": {
+        "pattern": "loaded|Initializing",
+        "timeout": 60000
+      }
+    },
+    {
+      "action": "toggle_console",
+      "params": {}
+    },
+    {
+      "action": "wait",
+      "params": { "ms": 3000 }
+    },
+    {
+      "action": "screenshot",
+      "params": { "path": "/tmp/openmohaa_test_map_load.png" }
+    },
+    {
+      "action": "assert_running",
+      "params": {}
+    }
+  ],
+  "teardown": [
+    {
+      "action": "command",
+      "params": { "command": "quit" }
+    },
+    {
+      "action": "wait",
+      "params": { "ms": 3000 }
+    }
+  ]
+}
