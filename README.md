@@ -15,6 +15,7 @@ A complete Model Context Protocol (MCP) server for automating, testing, and cont
 - **Server Management**: Start, stop, query, and control dedicated servers via RCON
 - **Performance Monitoring**: Track FPS, memory, CPU/GPU usage, run benchmarks
 - **Log Analysis**: Parse, search, and analyze game and server logs
+- **Script Validation**: Validate Morpheus scripts using mfuse_exec
 
 ## Requirements
 
@@ -65,7 +66,9 @@ Add to your MCP client configuration (e.g., VS Code mcp.json):
       "args": ["/path/to/opm-mcp/dist/index.js"],
       "env": {
         "OPENMOHAA_EXEC_PATH": "/path/to/openmohaa",
-        "OPENMOHAA_GAME_DIR": "/path/to/game/directory"
+        "OPENMOHAA_GAME_DIR": "/path/to/game/directory",
+        "OPENMOHAA_MFUSE_EXEC_PATH": "/path/to/mfuse_exec",
+        "OPENMOHAA_COMMANDS_LIST_PATH": "/path/to/commands.txt"
       }
     }
   }
@@ -78,6 +81,8 @@ Add to your MCP client configuration (e.g., VS Code mcp.json):
 |----------|-------------|
 | `OPENMOHAA_EXEC_PATH` | Default path to OpenMOHAA executable. Used by `openmohaa_launch` if no path provided. |
 | `OPENMOHAA_GAME_DIR` | Default game directory for config/demo/log operations. |
+| `OPENMOHAA_MFUSE_EXEC_PATH` | Path to mfuse_exec for Morpheus script validation. |
+| `OPENMOHAA_COMMANDS_LIST_PATH` | Path to commands.txt for script validation. |
 
 You can check configured defaults with `openmohaa_get_defaults`.
 
@@ -231,6 +236,14 @@ Take a screenshot of the game window
 - `openmohaa_log_summary` - Generate summary
 - `openmohaa_log_set_dir` - Set log directory
 
+#### Script Validation
+- `openmohaa_script_validate_file` - Validate a Morpheus script file
+- `openmohaa_script_validate_content` - Validate script content
+- `openmohaa_script_validate_files` - Validate multiple script files
+- `openmohaa_script_validator_status` - Get validator status
+- `openmohaa_script_set_mfuse_path` - Set mfuse_exec path
+- `openmohaa_script_set_commands_list` - Set commands.txt path
+
 ## Automation Scripts
 
 Create automated test sequences:
@@ -284,7 +297,7 @@ npm test
 
 ```
 src/
-  index.ts            # MCP server entry point (100 tools)
+  index.ts            # MCP server entry point (106 tools)
   types.ts            # Type definitions
   launcher.ts         # Process control module
   console-manager.ts  # Console interaction
@@ -297,6 +310,7 @@ src/
   server-manager.ts   # Dedicated server control
   performance-monitor.ts # Performance tracking
   log-analyzer.ts     # Log parsing and analysis
+  script-validator.ts # Morpheus script validation
 ```
 
 ## Troubleshooting

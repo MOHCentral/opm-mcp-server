@@ -10,6 +10,8 @@ Configure these in your MCP client's `env` section:
 |----------|-------------|
 | `OPENMOHAA_EXEC_PATH` | Default path to OpenMOHAA executable |
 | `OPENMOHAA_GAME_DIR` | Default game directory for config/demo/log operations |
+| `OPENMOHAA_MFUSE_EXEC_PATH` | Path to mfuse_exec for Morpheus script validation |
+| `OPENMOHAA_COMMANDS_LIST_PATH` | Path to commands.txt for script validation |
 
 ## Game Lifecycle Tools
 
@@ -1431,3 +1433,104 @@ Set the log directory.
 | dir | string | Yes | Log directory path |
 
 **Response**: "Log directory set to: path"
+
+---
+
+## Script Validation Tools
+
+These tools validate Morpheus scripts using the mfuse_exec validator.
+
+### openmohaa_script_validate_file
+
+Validate a Morpheus script file.
+
+**Parameters**:
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| scriptPath | string | Yes | Path to the script file to validate |
+
+**Response**:
+```json
+{
+  "success": true,
+  "diagnostics": [
+    {
+      "severity": "error",
+      "line": 10,
+      "column": 0,
+      "message": "syntax error, unexpected TOKEN_RIGHT_BRACES",
+      "file": "script.scr"
+    }
+  ],
+  "rawOutput": "...",
+  "duration": 150
+}
+```
+
+### openmohaa_script_validate_content
+
+Validate script content directly (creates a temp file).
+
+**Parameters**:
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| content | string | Yes | Script content to validate |
+| scriptDir | string | Yes | Directory for script context (for includes) |
+| scriptName | string | No | Name for the script (default: temp_script.scr) |
+
+**Response**: Same as validate_file
+
+### openmohaa_script_validate_files
+
+Validate multiple script files.
+
+**Parameters**:
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| scriptPaths | string[] | Yes | Array of script file paths to validate |
+
+**Response**: Object mapping file paths to validation results
+
+### openmohaa_script_validator_status
+
+Get script validator status and configuration.
+
+**Parameters**: None
+
+**Response**:
+```json
+{
+  "available": true,
+  "mfuseExecPath": "/path/to/mfuse_exec",
+  "commandsListPath": "/path/to/commands.txt",
+  "mfuseExecExists": true,
+  "commandsListExists": true
+}
+```
+
+### openmohaa_script_set_mfuse_path
+
+Set the path to mfuse_exec validator.
+
+**Parameters**:
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| path | string | Yes | Path to mfuse_exec executable |
+
+**Response**: "mfuse_exec path set to: path"
+
+### openmohaa_script_set_commands_list
+
+Set the path to commands.txt for validation.
+
+**Parameters**:
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| path | string | Yes | Path to commands.txt file |
+
+**Response**: "Commands list path set to: path"

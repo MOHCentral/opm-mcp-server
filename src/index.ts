@@ -26,11 +26,14 @@ import { ConfigManager } from './config-manager.js';
 import { ServerManager } from './server-manager.js';
 import { PerformanceMonitor } from './performance-monitor.js';
 import { LogAnalyzer } from './log-analyzer.js';
+import { ScriptValidator } from './script-validator.js';
 import type { AutomationScript, PixelColor, ScreenRegion } from './types.js';
 
 // Environment variable defaults
 const DEFAULT_EXEC_PATH = process.env.OPENMOHAA_EXEC_PATH || '';
 const DEFAULT_GAME_DIR = process.env.OPENMOHAA_GAME_DIR || '';
+const DEFAULT_MFUSE_EXEC_PATH = process.env.OPENMOHAA_MFUSE_EXEC_PATH || '';
+const DEFAULT_COMMANDS_LIST_PATH = process.env.OPENMOHAA_COMMANDS_LIST_PATH || '';
 
 // Initialize components
 const launcher = new ProcessLauncher();
@@ -49,6 +52,7 @@ const configManager = new ConfigManager('.');
 const serverManager = new ServerManager();
 const performanceMonitor = new PerformanceMonitor(screenCapture, consoleManager);
 const logAnalyzer = new LogAnalyzer('.');
+const scriptValidator = new ScriptValidator(DEFAULT_MFUSE_EXEC_PATH, DEFAULT_COMMANDS_LIST_PATH);
 
 // Event logging
 launcher.on('log', (entry) => {
@@ -1355,6 +1359,77 @@ const tools: Tool[] = [
       required: ['dir'],
     },
   },
+
+  // === Script Validation Tools ===
+  {
+    name: 'openmohaa_script_validate_file',
+    description: 'Validate a Morpheus script file using mfuse_exec',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        scriptPath: { type: 'string', description: 'Path to the script file to validate' },
+      },
+      required: ['scriptPath'],
+    },
+  },
+  {
+    name: 'openmohaa_script_validate_content',
+    description: 'Validate Morpheus script content using mfuse_exec',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        content: { type: 'string', description: 'Script content to validate' },
+        scriptDir: { type: 'string', description: 'Directory for script context (for includes)' },
+        scriptName: { type: 'string', description: 'Name for the script (default: temp_script.scr)' },
+      },
+      required: ['content', 'scriptDir'],
+    },
+  },
+  {
+    name: 'openmohaa_script_validate_files',
+    description: 'Validate multiple Morpheus script files',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        scriptPaths: { 
+          type: 'array', 
+          items: { type: 'string' },
+          description: 'Array of script file paths to validate' 
+        },
+      },
+      required: ['scriptPaths'],
+    },
+  },
+  {
+    name: 'openmohaa_script_validator_status',
+    description: 'Get script validator status and configuration',
+    inputSchema: {
+      type: 'object',
+      properties: {},
+    },
+  },
+  {
+    name: 'openmohaa_script_set_mfuse_path',
+    description: 'Set the path to mfuse_exec validator',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        path: { type: 'string', description: 'Path to mfuse_exec executable' },
+      },
+      required: ['path'],
+    },
+  },
+  {
+    name: 'openmohaa_script_set_commands_list',
+    description: 'Set the path to commands.txt for validation',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        path: { type: 'string', description: 'Path to commands.txt file' },
+      },
+      required: ['path'],
+    },
+  },
 ];
 
 // Create the MCP server
@@ -1429,7 +1504,9 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
             text: JSON.stringify({
               executablePath: DEFAULT_EXEC_PATH || '(not set)',
               gameDirectory: DEFAULT_GAME_DIR || '(not set)',
-              hint: 'Set via OPENMOHAA_EXEC_PATH and OPENMOHAA_GAME_DIR env vars in mcp.json',
+              mfuseExecPath: DEFAULT_MFUSE_EXEC_PATH || '(not set)',
+              commandsListPath: DEFAULT_COMMANDS_LIST_PATH || '(not set)',
+              hint: 'Set via env vars: OPENMOHAA_EXEC_PATH, OPENMOHAA_GAME_DIR, OPENMOHAA_MFUSE_EXEC_PATH, OPENMOHAA_COMMANDS_LIST_PATH',
             }, null, 2),
           }],
         };
@@ -2409,6 +2486,57 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         logAnalyzer.setLogDir(args.dir as string);
         return {
           content: [{ type: 'text', text: `Log directory set to: ${args.dir}` }],
+        };
+      }
+
+      // === Script Validation ===
+      case 'openmohaa_script_validate_file': {
+        const result = await scriptValidator.validateFile(args.scriptPath as string);
+        return {
+          content: [{ type: 'text', text: JSON.stringify(result, null, 2) }],
+        };
+      }
+
+      case 'openmohaa_script_validate_content': {
+        const result = await scriptValidator.validateContent(
+          args.content as string,
+          args.scriptDir as string,
+          args.scriptName as string | undefined
+        );
+        return {
+          content: [{ type: 'text', text: JSON.stringify(result, null, 2) }],
+        };
+      }
+
+      case 'openmohaa_script_validate_files': {
+        const results = await scriptValidator.validateFiles(args.scriptPaths as string[]);
+        const output: Record<string, unknown> = {};
+        results.forEach((value, key) => {
+          output[key] = value;
+        });
+        return {
+          content: [{ type: 'text', text: JSON.stringify(output, null, 2) }],
+        };
+      }
+
+      case 'openmohaa_script_validator_status': {
+        const status = scriptValidator.getStatus();
+        return {
+          content: [{ type: 'text', text: JSON.stringify(status, null, 2) }],
+        };
+      }
+
+      case 'openmohaa_script_set_mfuse_path': {
+        scriptValidator.setMfuseExecPath(args.path as string);
+        return {
+          content: [{ type: 'text', text: `mfuse_exec path set to: ${args.path}` }],
+        };
+      }
+
+      case 'openmohaa_script_set_commands_list': {
+        scriptValidator.setCommandsListPath(args.path as string);
+        return {
+          content: [{ type: 'text', text: `Commands list path set to: ${args.path}` }],
         };
       }
 
